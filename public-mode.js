@@ -53,17 +53,17 @@
     };
     const originalRender = S.render;
     S.render = (...args) => {
-      if (!S.data.publicRepeatExampleVersion) {
-        const oldExamples = new Set(['bd43458f-d1b3-4c53-b91b-f24331fb22cc', 'd8138197-2288-4fa4-99b2-babb1b1ff731']);
+      if (S.data.publicRepeatExampleVersion !== 2) {
+        const oldExamples = new Set(['bd43458f-d1b3-4c53-b91b-f24331fb22cc', 'd8138197-2288-4fa4-99b2-babb1b1ff731', 'korean:6dc2d67495e45edd3634065b5341f77738c8aa47d8e921832342148aecf2cae3:word:p506:l1', 'korean:6dc2d67495e45edd3634065b5341f77738c8aa47d8e921832342148aecf2cae3:word:p518:l1']);
         const selected = S.data.items.filter(item => item.extraPractice);
-        if (selected.length === oldExamples.size && selected.every(item => oldExamples.has(item.id))) {
+        if (selected.length === 2 && selected.every(item => oldExamples.has(item.id))) {
           const wordExamples = new Set(window.SC_PUBLIC_DATA.items.filter(item => item.extraPractice).map(item => item.id));
           for (const item of S.data.items) {
             if (oldExamples.has(item.id)) delete item.extraPractice;
             if (wordExamples.has(item.id)) item.extraPractice = true;
           }
         }
-        S.data.publicRepeatExampleVersion = 1;
+        S.data.publicRepeatExampleVersion = 2;
         S.persist();
       }
       const result = originalRender(...args); applyControls(); return result;
