@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <base href="./">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>scrawl</title>
+  <link rel="stylesheet" href="style.css?v=scrawl-public-current-v1">
+  <link rel="icon" type="image/png" href="assets/moonge.png?v=scrawl-public-current-v1">
+  <script src="public-data.js" defer></script>
+  <script src="public-media.js" defer></script>
+  <script src="public-mode.js" defer></script>
+  <script src="app.js?v=scrawl-public-current-v1" defer></script>
+  <script src="management.js?v=scrawl-public-current-v1" defer></script>
+  <script src="sentence-summary.js?v=scrawl-public-current-v1" defer></script>
+  <script src="study-order.js?v=scrawl-public-current-v1" defer></script>
+  <script src="ditto-word-restore.js?v=scrawl-public-current-v1" defer></script>
+  <script src="quality.js?v=scrawl-public-current-v1" defer></script>
+  <script src="song-service.js?v=scrawl-public-current-v1" defer></script>
+  <script src="grammar-notes.js?v=scrawl-public-current-v1" defer></script>
+  <script src="books.js?v=scrawl-public-current-v1" defer></script>
+  <script src="practice.js?v=scrawl-public-current-v1" defer></script>
+  <script src="grammar-quiz.js?v=scrawl-public-current-v1" defer></script>
+  <script src="combined.js?v=scrawl-public-current-v1" defer></script>
+  <script src="scroll.js?v=scrawl-public-current-v1" defer></script>
+  <script src="masonry.js?v=scrawl-public-current-v1" defer></script>
+  <script src="help.js?v=scrawl-public-current-v1" defer></script>
+  <script src="korean-import.js?v=scrawl-public-current-v1" defer></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar glass" aria-label="项目与笔记本">
+      <a class="brand" href="#sidebar" aria-label="收起侧栏" aria-expanded="true"><img id="moonge" src="assets/moonge.png" alt="潦草小狗"><span>scrawl</span></a>
+      <nav id="sidebarNav"></nav>
+      <button type="button" id="usageGuide" class="sidebar-poem" aria-label="设置" aria-haspopup="dialog">what's your<br>love language<svg class="dog-mark bone-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="m12 16 12 8M16 12l8 12M12 16C3 19 0 10 5 7c-2-6 7-8 11 5M24 24c-3 9 6 12 9 7 6 2 8-7-5-11"/></svg></button>
+    </aside>
+    <header class="topbar"><div id="breadcrumb"></div><div class="top-copy"><span lang="ko">넌 내 왕관이 되지</span><button type="button" id="stopPlayback" class="icon-button stop-all-button" aria-label="停止全部播放"><svg class="dog-mark top-ear-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M12 10q4-3 8 0"/><g class="top-ear-left"><path d="M12 10C7 5 4 9 5 17c0 6 3 9 5 5l2-12Z"/></g><g class="top-ear-right"><path d="M20 10c5-5 8-1 7 7 0 6-3 9-5 5l-2-12Z"/></g></svg></button></div></header>
+    <main class="workspace glass"><div id="view"></div><aside id="answerPanel" class="answer-panel" aria-label="当前页问答" hidden><div class="answer-head"><span>问答</span><button id="closeAnswers" class="icon-button" aria-label="关闭问答"></button></div><div id="answerMessages" class="answer-messages" aria-live="polite"></div></aside></main>
+    <footer id="globalComposer" class="composer" aria-label="全站问答">
+      <div id="attachments" class="attachment-list"></div>
+      <textarea id="chatInput" aria-label="提问或学习内容" placeholder="问点什么，或添加学习材料…" rows="1"></textarea>
+      <div class="composer-tools"><button class="api-button" id="apiButton">API <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"/></svg></button><button class="icon-button send-button" id="sendMessage" aria-label="发送"></button></div>
+    </footer>
+  </div>
+  <audio id="songAudio" preload="metadata"></audio><audio id="speechAudio" preload="auto"></audio>
+  <div id="hoverPreview" class="hover-preview" role="tooltip" hidden></div>
+  <div id="contextMenu" class="context-menu" role="menu" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="dialog" aria-labelledby="dialogTitle"><form id="dialogForm"><div class="dialog-head"><h2 id="dialogTitle"></h2><button type="button" id="closeDialog" class="icon-button" aria-label="关闭"></button></div><div id="dialogBody"></div><div id="dialogActions" class="dialog-actions"></div></form></dialog>
+  <input id="fileInput" type="file" accept="image/*,.pdf,.docx,.doc,.txt" multiple hidden>
+</body>
+</html>
