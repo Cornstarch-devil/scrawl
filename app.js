@@ -142,7 +142,18 @@ SC.speechConfigReady=window.SC_PUBLIC?Promise.resolve():fetch('/api/settings',{s
 const voiceText=text=>String(text||'').normalize('NFC').trim();
 const voiceKey=part=>(part.lang||'ko')+':'+voiceText(part.text);
 function recordVoice(timing){SC.ui.voiceTimings ||= [];SC.ui.voiceTimings.push({...timing});if(SC.ui.voiceTimings.length>40)SC.ui.voiceTimings.shift();}
+function publicVoiceResource(part){
+  const key=voiceKey(part),raw=window.SC_VOICE_CACHE?.[key]||window.SC_VOICE_CACHE?.[(part.lang||'ko')+':'+part.text.trim()]||window.SC_VOICE_CACHE?.[(part.lang||'ko')+':'+voiceText(part.text).normalize('NFD')],url=window.SC_PUBLIC_URL(raw)||null;
+  const timing={key,request:performance.now(),source:'static-cache',cacheHit:!!url,...(!url?{stage:'cache_missing',error:'公开版暂未提供这条录音。'}:{})};
+  generatedVoices.set(key,{url,timing,promise:Promise.resolve(url)});return url;
+}
+function speechPlaybackFailed(el,key,epoch,error){
+  if(epoch!==audioEpoch)return;
+  const entry=generatedVoices.get(key),code=el.error?.code,message=code===2||error?.name==='NetworkError'?'录音下载失败，请点击重试。':code===3||code===4||error?.name==='NotSupportedError'?'这条录音的格式无法播放。':'录音播放失败，请点击重试。';
+  if(entry)entry.failed=true;recordVoice({...entry?.timing,stage:code===2?'audio_download':'audio_play',mediaCode:code,error:message});SC.stopSpeech();SC.toast(message);
+}
 function voiceResource(part){
+  if(window.SC_PUBLIC)return Promise.resolve(publicVoiceResource(part));
   const key=voiceKey(part),old=generatedVoices.get(key);
   if(old)return old.promise;
   const epoch=voiceCacheEpoch,timing={key,request:performance.now(),voice:part.lang==='ko'?'ko-KR-SunHiNeural':'en-US-JennyNeural',source:SC.ui.speechProvider||'edge_tts'},entry={timing};
@@ -167,7 +178,7 @@ function voiceResource(part){
   })().catch(error=>{entry.failed=true;timing.requestMs=performance.now()-timing.request;timing.error=error.name==='TimeoutError'?'语音请求超时。':error instanceof TypeError?'无法连接语音服务。':error.message;return null;});
   generatedVoices.set(key,entry);return entry.promise;
 }
-SC.prepareSpeech=parts=>Promise.all(parts.filter(part=>part.text?.trim()&&(part.lang||'ko')==='ko').map(part=>voiceResource({text:part.text,lang:'ko'})));
+SC.prepareSpeech=parts=>window.SC_PUBLIC?Promise.resolve([]):Promise.all(parts.filter(part=>part.text?.trim()&&(part.lang||'ko')==='ko').map(part=>voiceResource({text:part.text,lang:'ko'})));
 async function playSpeech(epoch){
   if(epoch!==audioEpoch||!speechQueue.length||document.hidden)return;
   if(feedbackAudio)await feedbackAudio;
@@ -176,14 +187,15 @@ async function playSpeech(epoch){
   const part=speechQueue[queueIndex],key=voiceKey(part);
   let cached=null;
   if(['ko','en'].includes(part.lang)){
-    cached=await voiceResource(part);
+    cached=window.SC_PUBLIC?publicVoiceResource(part):await voiceResource(part);
     if(epoch!==audioEpoch||!speechQueue.length||document.hidden)return;
     if(performance.now()<feedbackUntil){speechTimer=setTimeout(()=>playSpeech(epoch),feedbackUntil-performance.now());return;}
   }
   if(cached){
-    SC.player?.audio.pause();const el=SC.$('#speechAudio'),start=performance.now();if(el.src!==cached)el.src=cached;else el.currentTime=0;el.playbackRate=part.lang==='ko'&&part.sentence===true?SC.koreanSentenceRate():1;el.onended=()=>nextSpeech(epoch);el.onerror=()=>{if(epoch!==audioEpoch)return;const entry=generatedVoices.get(key);if(entry)entry.failed=true;recordVoice({...entry?.timing,error:'音频无法播放。'});SC.stopSpeech();SC.toast('音频暂时不可播放，请主动点击重试。');};el.onplaying=()=>{if(epoch===audioEpoch)recordVoice({...generatedVoices.get(key)?.timing,startMs:performance.now()-start});};
-    el.play()?.catch(()=>{if(epoch===audioEpoch)voiceBlocked();});return;
+    SC.player?.audio.pause();const el=SC.$('#speechAudio'),start=performance.now();if(el.src!==cached)el.src=cached;else el.currentTime=0;el.playbackRate=part.lang==='ko'&&part.sentence===true?SC.koreanSentenceRate():1;el.onended=()=>nextSpeech(epoch);el.onerror=()=>speechPlaybackFailed(el,key,epoch);el.onplaying=()=>{if(epoch===audioEpoch)recordVoice({...generatedVoices.get(key)?.timing,startMs:performance.now()-start});};
+    el.play()?.catch(error=>{if(epoch!==audioEpoch)return;if(error.name==='NotAllowedError')voiceBlocked();else if(error.name!=='AbortError')speechPlaybackFailed(el,key,epoch,error);});return;
   }
+  if(window.SC_PUBLIC&&['ko','en'].includes(part.lang)){const timing=generatedVoices.get(key)?.timing;recordVoice({...timing});SC.stopSpeech();SC.toast(timing?.error||'公开版暂未提供这条录音。');return;}
   if(part.lang==='ko'){const timing=generatedVoices.get(key)?.timing;recordVoice({...timing});SC.stopSpeech();SC.toast(`韩语朗读失败：${timing?.error||'未收到有效语音。'} 点击内容可重试，文字仍可学习。`);return;}
   const voice=chooseVoice(part.lang);
   if(!voice){

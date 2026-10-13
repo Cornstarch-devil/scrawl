@@ -216,6 +216,7 @@
     SC.persist(); return true;
   };
   SC.syncSavedSongState = () => {
+    if(window.SC_PUBLIC&&SC.route!=='songs')return false;
     const key = SC.data.currentSong;
     if (key && SC.data.songLibrary?.[key]?.song && !songDeleted({id:key}) && SC.data.projects.some(row => row.id === 'song:' + key)) return SC.restoreSavedSong('song:' + key);
     const player = SC.player;
@@ -1011,7 +1012,7 @@
   };
   window.addEventListener('scrawl-api-configured', async () => { const song = SC.song; settingsPromise = null; await runs.get(song.id)?.promise; SC.analyzeSong(song); SC.prepareSongTranslations(song); });
   document.addEventListener('DOMContentLoaded', async () => {
-    if(window.SC_PUBLIC){SC.syncSavedSongState();return;}
+    if(window.SC_PUBLIC)return;
     await SC.syncDeletionStartup;
     await SC.syncDittoRecovery;
     if (SC.ui.deletionSyncBlocked) return;

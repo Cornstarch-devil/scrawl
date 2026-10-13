@@ -99,9 +99,24 @@
     S.renderBackupSettings = panel => { panel.innerHTML = '<p class="dialog-note">' + S.esc(notice) + '</p>'; };
     const originalRestoreSong = S.restoreSavedSong;
     S.restoreSavedSong = projectId => {
-      const song = S.data.songLibrary?.[String(projectId || '').replace(/^song:/, '')]?.song;
-      if (song) song.audioUrl = window.SC_PUBLIC_URL(song.audioUrl);
+      const key = String(projectId || '').replace(/^song:/, ''), song = S.data.songLibrary?.[key]?.song;
+      if (song) {
+        const published = window.SC_PUBLIC_DATA?.songLibrary?.[key]?.song;
+        const url = window.SC_PUBLIC_URL(song.audioUrl) || (published?.id === key ? window.SC_PUBLIC_URL(published.audioUrl) : '');
+        if (url) song.audioUrl = url;
+        else if (song.audioUrl) return false;
+      }
       return originalRestoreSong(projectId);
+    };
+    const originalSongRender = S.songRender;
+    let bindingPublicSong = false;
+    S.songRender = (...args) => {
+      if (!bindingPublicSong && S.route === 'songs' && S.song?.id && S.player?.audio && !S.player.audio.getAttribute('src')) {
+        bindingPublicSong = true;
+        try { S.restoreSavedSong('song:' + S.song.id); }
+        finally { bindingPublicSong = false; }
+      }
+      return originalSongRender(...args);
     };
     new MutationObserver(applyControls).observe(document.body, {childList: true, subtree: true});
     applyControls();
