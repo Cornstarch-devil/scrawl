@@ -52,7 +52,22 @@
       });
     };
     const originalRender = S.render;
-    S.render = (...args) => { const result = originalRender(...args); applyControls(); return result; };
+    S.render = (...args) => {
+      if (!S.data.publicRepeatExampleVersion) {
+        const oldExamples = new Set(['bd43458f-d1b3-4c53-b91b-f24331fb22cc', 'd8138197-2288-4fa4-99b2-babb1b1ff731']);
+        const selected = S.data.items.filter(item => item.extraPractice);
+        if (selected.length === oldExamples.size && selected.every(item => oldExamples.has(item.id))) {
+          const wordExamples = new Set(window.SC_PUBLIC_DATA.items.filter(item => item.extraPractice).map(item => item.id));
+          for (const item of S.data.items) {
+            if (oldExamples.has(item.id)) delete item.extraPractice;
+            if (wordExamples.has(item.id)) item.extraPractice = true;
+          }
+        }
+        S.data.publicRepeatExampleVersion = 1;
+        S.persist();
+      }
+      const result = originalRender(...args); applyControls(); return result;
+    };
     const originalGo = S.go;
     S.go = (route, ...args) => hiddenModes.has(route) ? false : originalGo(route, ...args);
     const originalManage = S.manage;
